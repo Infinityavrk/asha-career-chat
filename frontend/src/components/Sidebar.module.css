@@ -1,0 +1,62 @@
+.sidebar {
+    width: 300px;
+    background-color: #1e1e2f;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-right: 1px solid #444;
+  }
+  
+  h2 {
+    margin-bottom: 10px;
+  }
+  
+  .radioGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  input[type="radio"] {
+    margin-right: 8px;
+  }
+  
+  .subheading {
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  
+  .input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    margin-bottom: 10px;
+  }
+  
+  .buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .buttons button {
+    flex: 1;
+    padding: 8px;
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .suggestions button {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #2f2f47;
+    color: white;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+  }

@@ -1,0 +1,51 @@
+.app {
+    font-family: sans-serif;
+    background: linear-gradient(to right, #4b6cb7, #182848);
+    color: white;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .header {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .chatbox {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+  }
+  
+  .inputArea {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .inputArea input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+  }
+  
+  .inputArea button {
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border: none;
+    color: #4b6cb7;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .container {
+    display: flex;
+    height: 100vh;
+    background-color: #1e1e2f;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+  }

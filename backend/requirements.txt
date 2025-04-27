@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+langchain
+google-generativeai
+python-dotenv
+pydantic
+faiss-cpu
+streamlit
+openai
+transformers
+tqdm
+guardrails-ai
+selenium 
+webdriver-manager
