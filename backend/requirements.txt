@@ -12,3 +12,4 @@ tqdm
 guardrails-ai
 selenium 
 webdriver-manager
+langchain-community
