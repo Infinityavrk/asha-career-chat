@@ -13,3 +13,4 @@ guardrails-ai
 selenium 
 webdriver-manager
 langchain-community
+langchain-google-genai
