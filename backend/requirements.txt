@@ -64,7 +64,7 @@ multidict==6.0.5
 mypy-extensions==1.0.0
 numpy==1.26.4
 olefile==0.47
-openai
+openai==1.23.6
 orjson==3.10.6
 packaging==24.1
 pandas==2.2.2
