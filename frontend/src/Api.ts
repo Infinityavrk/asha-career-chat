@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'https://34.172.224.41:8000'; // Your FastAPI backend URL
+const API_BASE = 'http://34.172.224.41:8000'; // Your FastAPI backend URL
 
 // Call the /ask endpoint
 export const askQuestion = async (message: string, history: string[]) => {
