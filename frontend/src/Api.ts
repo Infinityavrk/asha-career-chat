@@ -13,6 +13,6 @@ export const askQuestion = async (message: string, history: string[]) => {
 
 // Call the /suggestions endpoint
 export const getSuggestions = async (): Promise<string[]> => {
-  const response = await axios.post(`/api/suggestions`, {
+  const response = await axios.post(`/api/suggestions`);
   return response.data.suggestions;
 };
