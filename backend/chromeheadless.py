@@ -16,30 +16,26 @@ def create_chrome_driver():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
 
-    # Specify path if chromedriver not in PATH
-    service = Service("/usr/bin/chromedriver")  # Update if needed
+    # Path to chromedriver
+    service = Service("/usr/bin/chromedriver")
     driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
 
 # -------------------------------
-#  Job Fetching Function
+#  Job Fetching Function (Fixed Safari)
 # -------------------------------
-def fetch_herkey_jobs_chrome_fixed(url):
+def fetch_herkey_jobs_safari_fixed(url):
     driver = create_chrome_driver()
     driver.get(url)
 
     jobs = []
 
     try:
-        # Before scraping, ensure full page load
-        WebDriverWait(driver, 30).until(lambda d: d.execute_script('return document.readyState') == 'complete')
-        
-        # Wait for specific element
         WebDriverWait(driver, 60).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="job-details"]'))
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="job-details"]'))
         )
         print(f"Job titles loaded successfully from {url}!")
-        time.sleep(5)  # small wait to allow full DOM updates
+        time.sleep(5)
         job_cards = driver.find_elements(By.CSS_SELECTOR, 'div[data-test-id="job-details"]')
 
         for card in job_cards:
@@ -82,9 +78,9 @@ def fetch_herkey_jobs_chrome_fixed(url):
     return jobs
 
 # -------------------------------
-#  Event Fetching Function
+#  Event Fetching Function (Fixed Safari)
 # -------------------------------
-def fetch_herkey_featured_events_chrome():
+def fetch_herkey_featured_events_safari():
     driver = create_chrome_driver()
     driver.get("https://events.herkey.com/events/")
 
@@ -126,18 +122,18 @@ def fetch_herkey_featured_events_chrome():
 #  Functions for different types
 # -------------------------------
 def get_all_jobs():
-    return fetch_herkey_jobs_chrome_fixed(url="https://www.herkey.com/jobs")
+    return fetch_herkey_jobs_safari_fixed(url="https://www.herkey.com/jobs")
 
 def get_work_from_home_jobs():
-    return fetch_herkey_jobs_chrome_fixed(url="https://www.herkey.com/jobs/search?work_mode=work-from-home")
+    return fetch_herkey_jobs_safari_fixed(url="https://www.herkey.com/jobs/search?work_mode=work-from-home")
 
 def get_jobs_by_keyword(keyword):
     keyword = keyword.strip().lower().replace(' ', '-')
     search_url = f"https://www.herkey.com/jobs/search?keyword={keyword}"
-    return fetch_herkey_jobs_chrome_fixed(url=search_url)
+    return fetch_herkey_jobs_safari_fixed(url=search_url)
 
 def get_all_events():
-    return fetch_herkey_featured_events_chrome()
+    return fetch_herkey_featured_events_safari()
 
 # -------------------------------
 # Example usage:
