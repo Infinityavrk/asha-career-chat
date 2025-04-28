@@ -31,8 +31,12 @@ def fetch_herkey_jobs_chrome_fixed(url):
     jobs = []
 
     try:
+        # Before scraping, ensure full page load
+        WebDriverWait(driver, 30).until(lambda d: d.execute_script('return document.readyState') == 'complete')
+        
+        # Wait for specific element
         WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="job-details"]'))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="job-details"]'))
         )
         print(f"Job titles loaded successfully from {url}!")
         time.sleep(5)  # small wait to allow full DOM updates
