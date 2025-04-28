@@ -64,37 +64,48 @@ class LLMResponder:
     def generate_response(self, message, history):
         docs = self.vector_store.similarity_search(message)
         web_knowledge = self.search.run(message)
-
-        # 🔥 NEW: Check if the user is asking about jobs
+    
+        # 🔥 NEW: Extract job or event keyword
         clean_keyword = self.keyword_extractor_chain.predict(user_query=message).strip().lower()
         print(f"🎯 Cleaned keyword extracted from LLM: {clean_keyword}")
+    
         jobs_info = ""
-        if "job" in message.lower() or "apply" in message.lower():
-            jobs = get_jobs_by_keyword(clean_keyword)
-            if jobs:
-                jobs_info = "\n\n".join([
-                    f"🔹 **{job['title']}** at {job['company']} ({job['location']})"
-                    for job in jobs[:3]
-                ])
-            else:
-                jobs_info = "No latest jobs found at the moment. Please check [HerKey jobs](https://www.herkey.com/jobs) directly."
-
-        # 🔍 Event keyword check
         events_data = ""
+    
+        # 🔥 Try fetching jobs gracefully
+        if "job" in message.lower() or "apply" in message.lower():
+            try:
+                # Introduce safe fetch with timeout
+                print("🔄 Trying to fetch jobs info...")
+                jobs = get_jobs_by_keyword(clean_keyword)
+                if jobs:
+                    jobs_info = "\n\n".join([
+                        f"🔹 **{job['title']}** at {job['company']} ({job['location']})"
+                        for job in jobs[:3]
+                    ])
+                else:
+                    jobs_info = "No latest jobs found at the moment. Please check [HerKey jobs](https://www.herkey.com/jobs) directly."
+            except Exception as e:
+                print(f"⚠️ Failed to fetch jobs: {str(e)}")
+                jobs_info = "Unable to fetch job listings right now due to network or server issues. Please try again later or check [HerKey jobs](https://www.herkey.com/jobs)."
+    
+        # 🔥 Try fetching events gracefully
         event_keywords = ["event", "bootcamp", "workshop", "career fair", "networking"]
         if any(kw in message.lower() for kw in event_keywords):
-            print("🔄 Fetching real-time HerKey events...")
-            events = fetch_herkey_featured_events_safari()
-            if events:
-                events_data = "\n\n".join([
-                    f"🔹 [{ev['name']}]({ev['link']})" for ev in events[:5]
-                ])
-            else:
-                events_data = "No upcoming featured events were found on HerKey right now."
-        else:
-            events_data = ""
-
-        # Step 1: Generate conversational LLM output
+            try:
+                print("🔄 Trying to fetch featured events...")
+                events = fetch_herkey_featured_events_safari()
+                if events:
+                    events_data = "\n\n".join([
+                        f"🔹 [{ev['name']}]({ev['link']})" for ev in events[:5]
+                    ])
+                else:
+                    events_data = "No upcoming featured events were found on HerKey right now."
+            except Exception as e:
+                print(f"⚠️ Failed to fetch events: {str(e)}")
+                events_data = "Unable to fetch event details right now due to network or server issues. Please check [HerKey Events](https://events.herkey.com/) later."
+    
+        # 🔥 Prepare final prompt with whatever info is available
         raw_response = self.chain.predict(
             context=history,
             input=message,
@@ -103,55 +114,50 @@ class LLMResponder:
             jobs_info=jobs_info,
             events_data=events_data
         )
-
-        # Step 2: Post-process to extract only text after "Career Expert:"
+    
+        # 🔥 Post-process output
         if "Career Expert:" in raw_response:
             extracted_response = raw_response.split("Career Expert:", 1)[-1].strip()
         else:
             extracted_response = raw_response.strip()
-
+    
         print(extracted_response)
-
-        # Step 3: Format it for Guardrails
-        #formatted_response = f"response: {extracted_response}"
-
-        # Step 4: Pass through Women Safety Filter (optional)
+    
+        # 🔥 Apply safety module
         safe_result = self.safety_filter.process_message(message, extracted_response)
         filtered_response = safe_result["final_response"]
-
-        # ✨ Prepare final outputs separately
+    
+        # 🔥 Prepare final conversation, jobs, events parts
         conversation_reply = filtered_response
         jobs_reply = ""
-
-        if jobs_info:
+        events_reply = ""
+    
+        if jobs_info and "Unable to fetch" not in jobs_info:
             jobs_reply = f"Here are some {clean_keyword} job opportunities I found for you:\n\n"
             jobs_reply += jobs_info
             jobs_reply += "\n\n[🔗 View More Jobs on HerKey](https://www.herkey.com/jobs)"
-
-
-        events_reply = ""
-
-        # ✨ If events were fetched, prepare them
-        if events_data.strip() and "No upcoming featured events" not in events_data:
+    
+        if events_data and "Unable to fetch" not in events_data:
             events_reply = "\n\nHere are some featured events happening soon:\n\n"
             events_reply += events_data
             events_reply += "\n\n[🔗 View More Events on HerKey](https://events.herkey.com/)"
-
-        print("--------------------"+events_reply)
+    
+        print("--------------------" + events_reply)
+    
+        # 🔥 Guardrails validation
         try:
             validation_output = self.guard.validate(llm_output=conversation_reply)
             print("✅ Guardrails validation success.")
-
+    
             if validation_output.validated_output:
                 conversation_reply = validation_output.validated_output.get("response", self.load_fallback_message())
-            
-            # ✅ Return BOTH conversation and jobs separately
+    
             return {
                 "conversation": conversation_reply,
                 "jobs": jobs_reply,
                 "events": events_reply
             }
-
+    
         except Exception as e:
             print(f"⚠️ Guardrails validation failed: {str(e)}")
             return {
