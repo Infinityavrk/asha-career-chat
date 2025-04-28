@@ -2,15 +2,35 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import time
+
+# -------------------------------
+#  Helper: Create Chrome driver
+# -------------------------------
+def create_chrome_driver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Headless mode for server
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+
+    # Path to chromedriver
+    service = Service("/usr/bin/chromedriver")
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
+
+# -------------------------------
+#  Job Fetching Function (Fixed Safari)
+# -------------------------------
 def fetch_herkey_jobs_safari_fixed(url):
-    driver = webdriver.Safari()
+    driver = create_chrome_driver()
     driver.get(url)
 
     jobs = []
 
     try:
-
         # Before scraping, ensure full page load
         WebDriverWait(driver, 30).until(lambda d: d.execute_script('return document.readyState') == 'complete')
         
@@ -19,7 +39,7 @@ def fetch_herkey_jobs_safari_fixed(url):
             EC.visibility_of_element_located((By.CSS_SELECTOR, 'div[data-test-id="job-details"]'))
         )
         print(f"Job titles loaded successfully from {url}!")
-        time.sleep(5)  # small wait to allow full DOM updates
+        time.sleep(5)
         job_cards = driver.find_elements(By.CSS_SELECTOR, 'div[data-test-id="job-details"]')
 
         for card in job_cards:
@@ -62,11 +82,10 @@ def fetch_herkey_jobs_safari_fixed(url):
     return jobs
 
 # -------------------------------
-#  Event Fetching Function
+#  Event Fetching Function (Fixed Safari)
 # -------------------------------
-
 def fetch_herkey_featured_events_safari():
-    driver = webdriver.Safari()
+    driver = create_chrome_driver()
     driver.get("https://events.herkey.com/events/")
 
     events = []
@@ -78,7 +97,6 @@ def fetch_herkey_featured_events_safari():
         print(f"Event titles loaded successfully from https://events.herkey.com/events/!")
         time.sleep(3)
 
-        # Now select all featured event cards
         event_cards = driver.find_elements(By.CSS_SELECTOR, 'div.card.event-details-card.mb-2.featured-events')
 
         for card in event_cards:
@@ -90,7 +108,6 @@ def fetch_herkey_featured_events_safari():
                 event = {
                     "name": event_name,
                     "link": event_link,
-                    #"mode": "Unknown"  # Optional: Mode parsing can be added later
                 }
                 events.append(event)
 
@@ -108,7 +125,6 @@ def fetch_herkey_featured_events_safari():
 # -------------------------------
 #  Functions for different types
 # -------------------------------
-
 def get_all_jobs():
     return fetch_herkey_jobs_safari_fixed(url="https://www.herkey.com/jobs")
 
@@ -116,15 +132,12 @@ def get_work_from_home_jobs():
     return fetch_herkey_jobs_safari_fixed(url="https://www.herkey.com/jobs/search?work_mode=work-from-home")
 
 def get_jobs_by_keyword(keyword):
-    # Replace spaces with hyphens and make lowercase
     keyword = keyword.strip().lower().replace(' ', '-')
     search_url = f"https://www.herkey.com/jobs/search?keyword={keyword}"
-    #search_url = f"https://api-prod.herkey.com/api/v1/herkey/jobs/es_candidate_jobs?page_no=1&page_size=10&keyword={keyword}&is_global_query=false"
     return fetch_herkey_jobs_safari_fixed(url=search_url)
 
 def get_all_events():
-    return fetch_herkey_events_safari()
-
+    return fetch_herkey_featured_events_safari()
 
 # -------------------------------
 # Example usage:
@@ -145,11 +158,9 @@ if __name__ == "__main__":
     keyword_jobs = get_jobs_by_keyword("ui ux design")
     for idx, job in enumerate(keyword_jobs, start=1):
         print(f"{idx}. {job['title']} at {job['company']} ({job['location']}, {job['work_type']}, {job['experience']})")
-
     '''
     print("\nFetching FEATURED EVENTS...\n")
-    featured_events = fetch_herkey_featured_events_safari()
+    featured_events = get_all_events()
     for idx, event in enumerate(featured_events, start=1):
-        #print(f"{idx}. {event['name']} ({event['mode']})")
         print(f"{idx}. {event['name']}")
         print(f"   Link: {event['link']}\n")
