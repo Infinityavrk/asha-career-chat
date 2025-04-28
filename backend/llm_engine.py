@@ -165,36 +165,3 @@ class LLMResponder:
                 "jobs": jobs_reply,
                 "events": events_reply
             }
-
-        '''
-        try:
-            # Step 5: Validate
-            validation_output = self.guard.validate(llm_output=filtered_response)
-            print("✅ Guardrails validation success.")
-
-            if validation_output.validated_output:
-                return validation_output.validated_output.get("response", self.load_fallback_message())
-            else:
-                print("⚠️ No validated output. Returning fallback.")
-                return filtered_response
-
-        except Exception as e:
-            print(f"⚠️ Guardrails validation failed: {str(e)}")
-            return self.load_fallback_message()
-        '''
-  
-'''
-    def generate_response(self, message, history):
-        docs = self.vector_store.similarity_search(message)
-        web_knowledge = self.search.run(message)
-
-        response = self.chain.predict(
-            context=history,
-            input=message,
-            text=docs,
-            web_knowledge=web_knowledge
-        )
-
-        safe_result = self.safety_filter.process_message(message, response)
-        return safe_result["final_response"]
-'''
