@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styles from './Sidebar.module.css';
-import { askQuestion } from '../Api';
 
 type CareerStage = 'Beginner' | 'Mid-Career' | 'Advanced';
 interface Props {
@@ -8,12 +7,12 @@ interface Props {
   setCareerStage: (stage: CareerStage) => void;
   chat: { role: 'user' | 'bot'; content: string }[];
   setChat: React.Dispatch<React.SetStateAction<{ role: 'user' | 'bot'; content: string }[]>>;
+  onSendMessage: (message: string) => void;  
 }
 
 
-const Sidebar: React.FC<Props> = ({ careerStage, setCareerStage, chat, setChat }) => {
+const Sidebar: React.FC<Props> = ({ careerStage, setCareerStage, chat, setChat,onSendMessage }) => {
   const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
 
   const questionBank: Record<CareerStage, string[]> = {
     Beginner: [
@@ -37,39 +36,9 @@ const Sidebar: React.FC<Props> = ({ careerStage, setCareerStage, chat, setChat }
 
    const sendMessage = async () => {
       if (!input.trim()) return;
-    
-      const updatedChat = [...chat, { role: 'user' as const, content: input }];
-      setChat(updatedChat);
-      setInput('');
-      setLoading(true);
-    
-      try {
-        const history = updatedChat.map(m => m.content);
-        const response = await askQuestion(input, history); // Your backend API call
-    
-        console.log('🚨 API response:', response);
-    
-        // ✅ Step 1: Extract conversation and jobs separately
-        let conversation = response.conversation;
-        let jobs = response.jobs;
-    
-        // ✅ Step 2: Merge them cleanly
-        let combinedBotReply = conversation;
-    
-        if (jobs) {
-          combinedBotReply += "\n\n---\n\n"; // optional separator
-          combinedBotReply += jobs;
-        }
-    
-        // ✅ Step 3: Set only the combined final message
-        setChat(prev => [...prev, { role: 'bot', content: combinedBotReply }]);
-        setLoading(false);
-    
-      } catch (error) {
-        console.error(error);
-        setChat(prev => [...prev, { role: 'bot', content: '⚠️ Error fetching response.' }]);
-        setLoading(false);
-      }
+      onSendMessage(input);  
+      setInput(''); 
+     
     };
   /*
   const sendMessage = async () => {

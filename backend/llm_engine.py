@@ -4,71 +4,7 @@ from langchain.prompts import PromptTemplate
 from langchain_community.utilities import SerpAPIWrapper
 from chatbot_safety_module import WomenFocusedChatbotSafety
 from guardrails import Guard
-from job_fetcher import get_jobs_by_keyword
-from job_fetcher import fetch_herkey_featured_events_safari
-
-class LLMResponder:
-    def __init__(self, vector_store):
-        self.guard = Guard.from_rail("asha_guard.rail")
-        self.vector_store = vector_store
-        self.gemini_model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
-        self.search = SerpAPIWrapper(params={"engine": "bing", "gl": "us", "hl": "en"})
-        self.safety_filter = WomenFocusedChatbotSafety()
-        
-
-        # 🛠 Prompt for keyword extraction
-        keyword_prompt = PromptTemplate(
-            input_variables=["user_query"],
-            template="""Extract the most relevant simple job or event keyword from the user's input below. 
-        Only output the single keyword like "java", "python", "data analyst", "frontend", "backend", etc.
-        No extra words or sentences.
-
-        User Input: {user_query}
-        Keyword:"""
-        )
-        # second lightweight LLM chain
-        self.keyword_extractor_chain = LLMChain(llm=self.gemini_model, prompt=keyword_prompt)
-        
-        DEFAULT_TEMPLATE = """The following is a friendly conversation between a human and an Career Advisor. The Advisor guides the user regaring jobs,interests, upcoming job events, workshops, bootcamp and other domain selection decsions.
-        It follows the previous conversation to do so
-
-        Relevant pieces of previous conversation:
-        {context},
-
-        Useful information from career guidance books:
-        {text}, 
-
-        Useful information about career guidance from Web:
-        {web_knowledge},
-
-        Upcoming relevant career events or bootcamps:
-        {events_data},
-
-        About jobs:
-        {jobs_info},
-
-        Current conversation:
-        Human: {input}
-        Career Expert:"""
-
-        self.template = PromptTemplate(
-            input_variables=["context", "input", "text", "web_knowledge"],
-            template=DEFAULT_TEMPLATE
-        )
-        self.chain = LLMChain(llm=self.gemini_model, prompt=self.template)
-
-    def load_fallback_message(self):
-        with open("asha_fallback_response.md", "r", encoding="utf-8") as f:
-            return f.read()
-
-    from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain_community.utilities import SerpAPIWrapper
-from chatbot_safety_module import WomenFocusedChatbotSafety
-from guardrails import Guard
-from job_fetcher import get_jobs_by_keyword
-from job_fetcher import fetch_herkey_featured_events_safari
+from job_fetcher import get_jobs_by_keyword,fetch_herkey_featured_events_safari
 
 class LLMResponder:
     def __init__(self, vector_store):
@@ -109,10 +45,11 @@ class LLMResponder:
 
         Current conversation:
         Human: {input}
-        Career Expert:"""
+        Career Expert:
+"""
 
         self.template = PromptTemplate(
-            input_variables=["context", "input", "text", "web_knowledge"],
+            input_variables=["context", "input", "text", "web_knowledge","events_data","jobs_info"],
             template=DEFAULT_TEMPLATE
         )
         self.chain = LLMChain(llm=self.gemini_model, prompt=self.template)
@@ -142,8 +79,24 @@ class LLMResponder:
         jobs_info = ""
         events_data = ""
 
+        job_detection_prompt = PromptTemplate(
+        input_variables=["user_query"],
+        template="""Determine if the user's query is primarily about finding job openings, applying for jobs, or exploring employment opportunities. 
+If the query is about salary, salary comparison, platform comparison, or confidential topics, respond "no".
+        Respond ONLY with "yes" or "no" (no extra text).
+
+        User Input: {user_query}
+        Answer:"""
+        )
+
+        self.job_detector_chain = LLMChain(llm=self.gemini_model, prompt=job_detection_prompt)
+        is_job_related = self.job_detector_chain.predict(user_query=message).strip().lower()
+        print(f"🎯 is_job_related extracted from LLM: {is_job_related}")
+
+        if is_job_related == "yes":
+
         # 🔥 Fetch jobs
-        if "job" in message.lower() or "apply" in message.lower():
+        #if "job" in message.lower() or "apply" in message.lower():
             try:
                 print("🔄 Trying to fetch jobs info...")
                 jobs = get_jobs_by_keyword(clean_keyword)
@@ -223,6 +176,7 @@ class LLMResponder:
         # 🔥 Guardrails Validation
         try:
             validation_output = self.guard.validate(llm_output=conversation_reply)
+            print(validation_output)
             print("✅ Guardrails validation success.")
 
             if validation_output.validated_output:

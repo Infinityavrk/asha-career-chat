@@ -7,6 +7,7 @@ import { askQuestion } from '../Api';
 interface Props {
   chat: { role: 'user' | 'bot'; content: string }[];
   setChat: React.Dispatch<React.SetStateAction<{ role: 'user' | 'bot'; content: string }[]>>;
+  loading: boolean;
 }
 
 const ChatWindow: React.FC<Props> = ({ chat, setChat }) => {

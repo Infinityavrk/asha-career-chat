@@ -3,7 +3,21 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from selenium.webdriver.chrome.options import Options
+
+def create_headless_driver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Headless mode
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    
+    driver = webdriver.Chrome(options=chrome_options)
+    return driver
+
 def fetch_herkey_jobs_safari_fixed(url):
+    #driver = create_headless_driver()  # Use headless Chrome instead of Safari
     driver = webdriver.Safari()
     driver.get(url)
 
