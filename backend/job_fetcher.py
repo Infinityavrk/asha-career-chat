@@ -10,7 +10,6 @@ def fetch_herkey_jobs_safari_fixed(url):
     jobs = []
 
     try:
-
         # Before scraping, ensure full page load
         WebDriverWait(driver, 30).until(lambda d: d.execute_script('return document.readyState') == 'complete')
         
